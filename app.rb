@@ -1,5 +1,10 @@
 require 'sinatra'
 require 'pp' # used for printing
+require'google/cloud/storage'
+
+# setting up gcs bucket
+storage = Google:Cloud::Storage.new(project_id: cs291a)
+bucket = storage.bucket 'cs291project2', skip_lookup=true
 
 get '/' do
   PP.pp request # printing request
