@@ -17,6 +17,7 @@ end
 
 get '/files/' do
   PP.pp request # printing request
+  
   "GET /files/\n"
 end
 
@@ -27,11 +28,27 @@ end
 
 post '/files/' do
   PP.pp request # printing request
+  if params['file'] == nil
+    halt 422
+    return
+  end
   file = File.open params['file']['tempfile']
+  if file.size > 1000000
+    halt 422
+    return
+  end
   digest = Digest::SHA256.hexdigest file.read
-  name = digest.insert(2, '/')
-  name = name.insert(5, '/')
-  
+  path = digest.insert(2, '/')
+  path = path.insert(5, '/')
+  if bucket.file path != nil
+    halt 409
+    return
+  end
+  name = Digest::SHA256.hexdigest file.read
+  bucket.upload_file(file, path)
+  json = {'uploaded': name}
+  status 201
+  body json
   "POST\n"
 end
 
