@@ -17,7 +17,7 @@ end
 
 get '/files/' do
   PP.pp request # printing request
-  
+
   "GET /files/\n"
 end
 
@@ -28,7 +28,7 @@ end
 
 post '/files/' do
   PP.pp request # printing request
-  if params['file'] == nil
+  if params['file'] == nil || params['file']['tempfile'] == nil
     halt 422
     return
   end
@@ -40,7 +40,7 @@ post '/files/' do
   digest = Digest::SHA256.hexdigest file.read
   path = digest.insert(2, '/')
   path = path.insert(5, '/')
-  if bucket.file path != nil
+  if bucket.file(path)&.exists?
     halt 409
     return
   end
