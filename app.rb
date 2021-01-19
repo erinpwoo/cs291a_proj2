@@ -12,18 +12,26 @@ get '/' do
   redirect to('/files/')
   status 302
   "location: " + request.path_info + "/files/"
-  "GET /\n"
 end
 
 get '/files/' do
   PP.pp request # printing request
-
-  "GET /files/\n"
+  files = bucket.files
+  hashes = []
+  files.all do |file|
+    downloaded = file.download
+    downloaded.rewind
+    digest = Digest::SHA256.hexdigest downloaded.read
+    hashes.append(digest)
+  end
+  hashes.sort
+  # body hashes
+  # status 200
+  return [200, JSON.generate(hashes)]
 end
 
 get '/files/:digest' do |file|
   PP.pp request # printing request
-  "GET /files/{DIGEST}\n"
 end
 
 post '/files/' do
@@ -47,12 +55,9 @@ post '/files/' do
   name = Digest::SHA256.hexdigest file.read
   bucket.upload_file(file, path)
   json = {'uploaded': name}
-  status 201
-  body json
-  "POST\n"
+  return [201, JSON.generate(json)]
 end
 
 delete '/files/:digest' do |file|
   PP.pp request # printing request
-  "DELETE \n"
 end
