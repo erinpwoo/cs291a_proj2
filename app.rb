@@ -34,7 +34,8 @@ get '/files/:digest' do |file|
   end
   path = file.insert(2, '/')
   path = path.insert(5, '/')
-  if !bucket.file(path)&.exists?
+  if bucket.file(path) == nil
+    puts path
     return 404
   end
   downloaded = bucket.file(path)
@@ -61,12 +62,24 @@ post '/files/' do
     halt 409
     return
   end
-  name = Digest::SHA256.hexdigest file.read
+  file.rewind
+  file_name = Digest::SHA256.hexdigest file.read
+  puts file_name
   bucket.upload_file(file, path)
-  json = {'uploaded': name}
+  json = {'uploaded': file_name}
+  puts JSON.generate(json)
   return [201, JSON.generate(json)]
 end
 
 delete '/files/:digest' do |file|
-  PP.pp request # printing request
+  if /[A-Fa-f0-9]{64}/.match(file) == nil 
+    return 422
+  end
+  path = file.insert(2, '/')
+  path = path.insert(5, '/')
+  file = bucket.file path
+  if file != nil
+    file.delete
+  end
+  return 200
 end
