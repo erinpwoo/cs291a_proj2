@@ -25,17 +25,26 @@ get '/files/' do
     hashes.append(digest)
   end
   hashes.sort
-  # body hashes
-  # status 200
   return [200, JSON.generate(hashes)]
 end
 
 get '/files/:digest' do |file|
-  PP.pp request # printing request
+  if /[A-Fa-f0-9]{64}/.match(file) == nil 
+    return 422
+  end
+  path = file.insert(2, '/')
+  path = path.insert(5, '/')
+  if !bucket.file(path)&.exists?
+    return 404
+  end
+  downloaded = bucket.file(path)
+  content = downloaded.download
+  header = {"Content-Type" => downloaded.content_type}
+  data = content.read
+  return [200, header, data.to_s]
 end
 
 post '/files/' do
-  PP.pp request # printing request
   if params['file'] == nil || params['file']['tempfile'] == nil
     halt 422
     return
