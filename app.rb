@@ -24,7 +24,7 @@ get '/files/' do
     digest = Digest::SHA256.hexdigest downloaded.read
     hashes.append(digest)
   end
-  hashes.sort
+  hashes = hashes.sort
   return [200, JSON.generate(hashes)]
 end
 
