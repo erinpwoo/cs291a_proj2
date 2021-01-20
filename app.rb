@@ -29,7 +29,11 @@ get '/files/' do
 end
 
 get '/files/:digest' do |file|
-  if /[A-Fa-f0-9]{64}/.match(file) == nil 
+  regex = /[A-Fa-f0-9]{64}/.match(file)
+  if regex == nil
+    return 422
+  end
+  if regex.length != file.length
     return 422
   end
   path = file.insert(2, '/')
@@ -46,15 +50,23 @@ get '/files/:digest' do |file|
 end
 
 post '/files/' do
-  if params['file'] == nil || params['file']['tempfile'] == nil
-    halt 422
-    return
+  if params == nil
+    return 422
+  end
+  if params['file'] == nil
+    return 422
+  end
+  if params['file']['tempfile'] == nil
+    return 422
+  end
+  file_size = File.size(params['file']['tempfile'])
+  if file_size == 0 || file_size > 1000000
+    return 422
+  end
+  if !File.readable?(params['file']['tempfile'])
+    return 422
   end
   file = File.open params['file']['tempfile']
-  if file.size > 1000000
-    halt 422
-    return
-  end
   digest = Digest::SHA256.hexdigest file.read
   path = digest.insert(2, '/')
   path = path.insert(5, '/')
@@ -65,6 +77,7 @@ post '/files/' do
   file.rewind
   file_name = Digest::SHA256.hexdigest file.read
   puts file_name
+  file.rewind
   bucket.upload_file(file, path)
   json = {'uploaded': file_name}
   puts JSON.generate(json)
@@ -72,7 +85,11 @@ post '/files/' do
 end
 
 delete '/files/:digest' do |file|
-  if /[A-Fa-f0-9]{64}/.match(file) == nil 
+  regex = /[A-Fa-f0-9]{64}/.match(file)
+  if regex == nil
+    return 422
+  end
+  if regex.length != file.length
     return 422
   end
   path = file.insert(2, '/')
