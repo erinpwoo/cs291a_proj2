@@ -14,15 +14,21 @@ get '/' do
   "location: " + request.path_info + "/files/"
 end
 
+def isValidPath(path)
+  return /[A-Fa-f0-9]{2}\/[A-Fa-f0-9]{2}\/[A-Fa-f0-9]{60}/.match?(path)
+end
+
 get '/files/' do
   PP.pp request # printing request
   files = bucket.files
   hashes = []
   files.all do |file|
-    downloaded = file.download
-    downloaded.rewind
-    digest = Digest::SHA256.hexdigest downloaded.read
-    hashes.append(digest)
+    if isValidPath file.name
+      downloaded = file.download
+      downloaded.rewind
+      digest = Digest::SHA256.hexdigest downloaded.read
+      hashes.append(digest)
+    end
   end
   hashes = hashes.sort
   return [200, JSON.generate(hashes)]
