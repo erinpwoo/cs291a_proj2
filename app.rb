@@ -24,10 +24,8 @@ get '/files/' do
   hashes = []
   files.all do |file|
     if isValidPath file.name
-      downloaded = file.download
-      downloaded.rewind
-      digest = Digest::SHA256.hexdigest downloaded.read
-      hashes.append(digest)
+      name = file.name.gsub("/","")
+      hashes.append(file.name)
     end
   end
   hashes = hashes.sort
